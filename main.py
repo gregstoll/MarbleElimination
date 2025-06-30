@@ -6,6 +6,9 @@ import pygame
 import pymunk.pygame_util
 import random
 
+WIDTH : int = 1500
+HEIGHT : int = 750
+
 def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
     body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
     body.position = (x, y)
@@ -21,6 +24,11 @@ def create_level1(space: pymunk.Space) -> None:
     floor = pymunk.Segment(space.static_body, (0, 590), (600, 590), 5)
     floor.elasticity = 0.9
     space.add(floor)
+
+    # Add a ceiling
+    ceiling = pymunk.Segment(space.static_body, (0, 5), (600, 5), 5)
+    ceiling.elasticity = 0.9
+    space.add(ceiling)
 
     # Bounds
     left = pymunk.Segment(space.static_body, (0, 0), (0, 590), 5)
@@ -70,15 +78,76 @@ def create_level1(space: pymunk.Space) -> None:
 
     # Segment from center to +100 units on x-axis (local coordinates)
     rotor_segment = pymunk.Segment(rotor_body, (-100, 0), (100, 0), 5)
-    rotor_segment.elasticity = 1.0
+    rotor_segment.elasticity = 0.9
     rotor_segment2 = pymunk.Segment(rotor_body, (0, -100), (0, 100), 5)
-    rotor_segment2.elasticity = 1.0
+    rotor_segment2.elasticity = 0.9
     space.add(rotor_body, rotor_segment, rotor_segment2)
+
+def drawRotor(space : pymunk.Space, x_pos: int, y_pos: int, velocity: int) -> None:
+    rotor_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+    rotor_body.position = (x_pos, y_pos)
+    rotor_body.angular_velocity = math.radians(velocity)  # 180 degrees per second
+
+    # Segment from center to +100 units on x-axis (local coordinates)
+    rotor_segment = pymunk.Segment(rotor_body, (-100, 0), (100, 0), 5)
+    rotor_segment.elasticity = 0.9
+    rotor_segment2 = pymunk.Segment(rotor_body, (0, -100), (0, 100), 5)
+    rotor_segment2.elasticity = 0.9
+    space.add(rotor_body, rotor_segment, rotor_segment2)
+
+
+def create_level2(space: pymunk.Space) -> None:
+    # Add a floor
+    floor = pymunk.Segment(space.static_body, (0, HEIGHT-20), (WIDTH, HEIGHT-10), 10)
+    floor.elasticity = 0.9
+    space.add(floor)
+
+    # Add a ceiling
+    ceiling = pymunk.Segment(space.static_body, (0, 10), (WIDTH, 10), 10)
+    ceiling.elasticity = 0.9
+    space.add(ceiling)
+
+    # Bounds
+    left = pymunk.Segment(space.static_body, (0, 0), (0, HEIGHT), 10)
+    left.elasticity = 1.0
+    space.add(left)
+    right = pymunk.Segment(space.static_body, (WIDTH-10, 0), (WIDTH-10, HEIGHT-100), 10)
+    right.elasticity = 1.0
+    space.add(right)
+
+    # Add grill
+    grill_x : int = 0
+    while (grill_x < WIDTH-50):
+        grill = pymunk.Segment(space.static_body, (grill_x, 600), (grill_x+50, 605), 5)
+        grill.elasticity = 0.9
+        space.add(grill)
+        grill_x = grill_x + 100
+
+    # Add slopes
+    slope1 = pymunk.Segment(space.static_body, (50, 120), (150, 220), 5)
+    slope1.elasticity = 0.9
+    space.add(slope1)
+    slope2 = pymunk.Segment(space.static_body, (100, 370), (200, 470), 5)
+    slope2.elasticity = 0.9
+    space.add(slope2)
+
+    drawRotor(space, 200, 200, 180)
+    drawRotor(space, 400, 200, 185)
+    drawRotor(space, 600, 200, 190)
+    drawRotor(space, 800, 200, 195)
+    drawRotor(space, 1000, 200, 170)
+    drawRotor(space, 1200, 200, 175)
+    drawRotor(space, 250, 400, 180)
+    drawRotor(space, 450, 400, 185)
+    drawRotor(space, 650, 400, 190)
+    drawRotor(space, 850, 400, 195)
+    drawRotor(space, 1050, 400, 170)
+    drawRotor(space, 1250, 400, 175)
 
 
 def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) -> pymunk.Shape:
     body = pymunk.Body(0, 0, pymunk.Body.STATIC)
-    body.position = (550, 50 * (winner_index + 1))
+    body.position = (WIDTH-50, 50 * (winner_index + 1))
     new_shape = pymunk.Circle(body, 15)
     new_shape.elasticity = 0.9
     new_shape.color = shape.color
@@ -87,7 +156,7 @@ def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) ->
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((600, 600))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     draw_options = pymunk.pygame_util.DrawOptions(screen)
 
@@ -96,16 +165,16 @@ def main():
 
     # Create marbles
     marbles : t.List[pymunk.Shape] = []
-    marbles.append(addMarble(space, random.randint(50, 500), 50))
-    marbles.append(addMarble(space, random.randint(50, 500), 50))
-    marbles.append(addMarble(space, random.randint(50, 500), 50))
-    marbles.append(addMarble(space, random.randint(50, 500), 50))
+    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
+    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
+    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
+    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
 
     # Create level
-    create_level1(space)
+    create_level2(space)
 
     platform_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
-    platform_body.position = (350, 170)
+    platform_body.position = (700, 350)
     slope4 = pymunk.Segment(platform_body, (-50, 50), (50, -50), 5)
     slope4.elasticity = 0.9
     space.add(platform_body, slope4)
@@ -125,7 +194,7 @@ def main():
         clock.tick(60)
 
         # Move platform back and forth
-        if platform_body.position.y > 500:
+        if platform_body.position.y > HEIGHT-100:
             direction = -1
         elif platform_body.position.y < 100:
             direction = 1
@@ -134,7 +203,7 @@ def main():
 
         random_marble.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
         for m in marbles:
-            if m.body.position.x > 600:
+            if m.body.position.x > WIDTH:
                 space.remove(m)
                 marbles.remove(m)
                 new_marble = drawWinner(space, m, len(winners))
