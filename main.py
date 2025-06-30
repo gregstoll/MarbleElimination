@@ -1,3 +1,4 @@
+from pymunk.vec2d import Vec2d
 import pymunk
 import typing as t
 import pygame
@@ -60,23 +61,19 @@ def create_level1(space: pymunk.Space) -> None:
     slope3 = pymunk.Segment(space.static_body, (400, 470), (500, 370), 5)
     slope3.elasticity = 0.9
     space.add(slope3)
-    slope4 = pymunk.Segment(space.static_body, (300, 220), (400, 120), 5)
-    slope4.elasticity = 0.9
-    space.add(slope4)
     flat1 = pymunk.Segment(space.static_body, (200, 350), (350, 355), 5)
     flat1.elasticity = 0.9
     space.add(flat1)
 
 
-def drawWinner(space : pymunk.Space, shape : pymunk.Shape) -> pymunk.Shape:
+def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) -> pymunk.Shape:
     body = pymunk.Body(0, 0, pymunk.Body.STATIC)
-    body.position = (550, 50)
+    body.position = (550, 50 * (winner_index + 1))
     new_shape = pymunk.Circle(body, 15)
     new_shape.elasticity = 0.9
     new_shape.color = shape.color
     space.add(body, new_shape)
     return new_shape
-
 
 def main():
     pygame.init()
@@ -89,17 +86,24 @@ def main():
 
     # Create marbles
     marbles : t.List[pymunk.Shape] = []
-    marbles.append(addMarble(space, 102, 50))
-    marbles.append(addMarble(space, 202, 50))
-    marbles.append(addMarble(space, 302, 50))
-    marbles.append(addMarble(space, 402, 50))
+    marbles.append(addMarble(space, random.randint(50, 500), 50))
+    marbles.append(addMarble(space, random.randint(50, 500), 50))
+    marbles.append(addMarble(space, random.randint(50, 500), 50))
+    marbles.append(addMarble(space, random.randint(50, 500), 50))
 
     # Create level
     create_level1(space)
 
+    platform_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+    platform_body.position = (350, 170)
+    slope4 = pymunk.Segment(platform_body, (-50, 50), (50, -50), 5)
+    slope4.elasticity = 0.9
+    space.add(platform_body, slope4)
+
     running = True
     winners : t.List[pymunk.Shape] = []
     random_marble : pymunk.Shape = marbles[0]
+    direction = 1
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -109,16 +113,24 @@ def main():
         space.debug_draw(draw_options)
         pygame.display.flip()
         clock.tick(60)
+
+        # Move platform back and forth
+        if platform_body.position.y > 500:
+            direction = -1
+        elif platform_body.position.y < 100:
+            direction = 1
+        speed = 100
+        platform_body.velocity = Vec2d(0, direction * speed)
+
         random_marble.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
         for m in marbles:
             if m.body.position.x > 600:
                 space.remove(m)
                 marbles.remove(m)
-                winners.append(m)
-                if len(winners) == 1:
-                    new_marble = drawWinner(space, m)
-                    if random_marble == m:
-                        random_marble = new_marble
+                new_marble = drawWinner(space, m, len(winners))
+                winners.append(new_marble)
+                if random_marble == m:
+                    random_marble = new_marble
 
 
     pygame.quit()
