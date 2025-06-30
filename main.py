@@ -1,4 +1,5 @@
 from pymunk.vec2d import Vec2d
+import math
 import pymunk
 import typing as t
 import pygame
@@ -61,9 +62,18 @@ def create_level1(space: pymunk.Space) -> None:
     slope3 = pymunk.Segment(space.static_body, (400, 470), (500, 370), 5)
     slope3.elasticity = 0.9
     space.add(slope3)
-    flat1 = pymunk.Segment(space.static_body, (200, 350), (350, 355), 5)
-    flat1.elasticity = 0.9
-    space.add(flat1)
+
+
+    rotor_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+    rotor_body.position = (300, 350)
+    rotor_body.angular_velocity = math.radians(180)  # 180 degrees per second
+
+    # Segment from center to +100 units on x-axis (local coordinates)
+    rotor_segment = pymunk.Segment(rotor_body, (-100, 0), (100, 0), 5)
+    rotor_segment.elasticity = 1.0
+    rotor_segment2 = pymunk.Segment(rotor_body, (0, -100), (0, 100), 5)
+    rotor_segment2.elasticity = 1.0
+    space.add(rotor_body, rotor_segment, rotor_segment2)
 
 
 def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) -> pymunk.Shape:
