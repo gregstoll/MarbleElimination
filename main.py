@@ -16,8 +16,15 @@ def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
     shape.elasticity = 0.9
     #shape.color = pygame.Color(50, 200, 50, 1)
     shape.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+    shape.collision_type = 1
     space.add(body, shape)
     return shape
+
+def on_red_segment_hits_marble(arbiter : pymunk.Arbiter, space: pymunk.Space, data):
+    for b in arbiter.bodies:
+        if b.body_type == pymunk.Body.DYNAMIC:
+            b.position = (100, 50)
+    return True  # Continue with normal physics
 
 def create_level1(space: pymunk.Space) -> None:
     # Add a floor
@@ -172,6 +179,15 @@ def main():
 
     # Create level
     create_level2(space)
+
+    # Create red segment
+    red_segment = pymunk.Segment(space.static_body, (10, HEIGHT-100), (10, HEIGHT-20), 10)
+    red_segment.elasticity = 1.0
+    red_segment.collision_type = 2
+    red_segment.color = pygame.Color("Red")
+    space.add(red_segment)
+
+    space.on_collision(1, 2, on_red_segment_hits_marble)
 
     platform_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
     platform_body.position = (700, 350)
