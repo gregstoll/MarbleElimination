@@ -13,8 +13,9 @@ import math
 import typing as t
 import pymunk.pygame_util
 import random
+import sys
 
-IS_EMSCRIPTEN = False
+IS_EMSCRIPTEN = sys.platform == 'emscripten'
 
 WIDTH : int = 1500
 HEIGHT : int = 750
