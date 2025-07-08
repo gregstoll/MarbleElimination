@@ -14,6 +14,7 @@ import typing as t
 import pymunk.pygame_util
 import random
 import sys
+import time
 
 IS_EMSCRIPTEN = sys.platform == 'emscripten'
 
@@ -177,6 +178,11 @@ async def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     draw_options = pymunk.pygame_util.DrawOptions(screen)
+
+    if IS_EMSCRIPTEN:
+        seed = time.monotonic_ns()
+        #print("seed is " + str(seed))
+        random.seed(seed)
 
     space = pymunk.Space()
     space.gravity = (0, 900)  # gravity pointing down
