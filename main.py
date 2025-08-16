@@ -17,9 +17,13 @@ import sys
 import time
 
 IS_EMSCRIPTEN = sys.platform == 'emscripten'
+FRAMES_PER_SECOND = 60
 
 WIDTH : int = 1500
 HEIGHT : int = 750
+
+def sign(x):
+    return int(math.copysign(1, x)) if x != 0 else 0
 
 def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
     body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
@@ -178,6 +182,7 @@ async def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     draw_options = pymunk.pygame_util.DrawOptions(screen)
+    collision_segments = []
 
     if IS_EMSCRIPTEN:
         seed = time.monotonic_ns()
@@ -208,6 +213,8 @@ async def main():
     # have on_collision :-(
     if not IS_EMSCRIPTEN:
         space.on_collision(1, 2, on_red_segment_hits_marble)
+    else:
+        collision_segments.append(red_segment)
 
     platform_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
     platform_body.position = (700, 350)
@@ -224,7 +231,7 @@ async def main():
             if event.type == pygame.QUIT:
                 running = False
         screen.fill((255, 255, 255))
-        space.step(1/60)
+        space.step(1/FRAMES_PER_SECOND)
         if not IS_EMSCRIPTEN:
             space.debug_draw(draw_options)
         pygame.display.flip()
@@ -284,6 +291,19 @@ async def main():
                 winners.append(new_marble)
                 if random_marble == m:
                     random_marble = new_marble
+            elif IS_EMSCRIPTEN:
+                # have to do on_collision check here
+                for segment in collision_segments:
+                    # TODO this is not really general for segments that aren't vertical
+                    if segment.a.y - 10 <= m.body.position.y and m.body.position.y <= segment.b.y + 10:
+                        # we're in the bottom "channel"
+                        old_x = m.body.position.x
+                        new_x = old_x + m.body.velocity.x/FRAMES_PER_SECOND
+                        # check if it's moving really really fast and would "go through" the segment
+                        if abs(new_x - segment.a.x) <= (m.radius + 10) or (sign(old_x - segment.a.x) != sign(new_x - segment.a.x)):
+                            #print(f"m.body.position.x = {m.body.position.x} m.body.velocity.x = {m.body.velocity.x} segment.a.x = {segment.a.x}, m.radius={m.radius}")
+                            m.body.position = (100, 50)
+                            continue
 
     pygame.quit()
 
