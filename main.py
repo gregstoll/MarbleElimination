@@ -17,6 +17,9 @@ import sys
 import time
 
 IS_EMSCRIPTEN = sys.platform == 'emscripten'
+if IS_EMSCRIPTEN:
+    import js
+
 FRAMES_PER_SECOND = 60
 
 WIDTH : int = 1500
@@ -188,6 +191,7 @@ async def main():
         seed = time.monotonic_ns()
         #print("seed is " + str(seed))
         random.seed(seed)
+        js.console.log(f"seed is {seed}")
 
     space = pymunk.Space()
     space.gravity = (0, 900)  # gravity pointing down
@@ -283,6 +287,7 @@ async def main():
         platform_body.velocity = Vec2d(0, direction * speed)
 
         random_marble.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+        beforeWinners = len(winners)
         for m in marbles:
             if m.body.position.x > WIDTH:
                 space.remove(m)
@@ -304,6 +309,22 @@ async def main():
                             #print(f"m.body.position.x = {m.body.position.x} m.body.velocity.x = {m.body.velocity.x} segment.a.x = {segment.a.x}, m.radius={m.radius}")
                             m.body.position = (100, 50)
                             continue
+        if len(winners) != beforeWinners:
+            js.console.log(f"transition from {beforeWinners} winners to {len(winners)}, len(marbles) is {len(marbles)}")
+            if len(marbles) == 1:
+                js.console.log("adding second red segment")
+                # Create red segment
+                red_segment2 = pymunk.Segment(space.static_body, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20), 10)
+                red_segment2.elasticity = 1.0
+                red_segment2.collision_type = 2
+                red_segment2.color = pygame.Color("Red")
+                space.add(red_segment2)
+
+                # emscripten version uses pymunk 6.4, which doesn't
+                # have on_collision :-(
+                if IS_EMSCRIPTEN:
+                    collision_segments.append(red_segment2)
+
 
     pygame.quit()
 
