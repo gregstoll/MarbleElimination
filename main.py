@@ -28,6 +28,7 @@ HEIGHT : int = 750
 def sign(x):
     return int(math.copysign(1, x)) if x != 0 else 0
 
+# TODO - store whether marble is random here
 def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
     body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
     body.position = (x, y)
@@ -303,16 +304,20 @@ async def main():
             elif IS_EMSCRIPTEN:
                 # have to do on_collision check here
                 for segment in collision_segments:
-                    # TODO this is not really general for segments that aren't vertical
-                    if segment.a.y - 10 <= m.body.position.y and m.body.position.y <= segment.b.y + 10:
-                        # we're in the bottom "channel"
-                        old_x = m.body.position.x
-                        new_x = old_x + m.body.velocity.x/FRAMES_PER_SECOND
-                        # check if it's moving really really fast and would "go through" the segment
-                        if abs(new_x - segment.a.x) <= (m.radius + 10) or (sign(old_x - segment.a.x) != sign(new_x - segment.a.x)):
-                            #print(f"m.body.position.x = {m.body.position.x} m.body.velocity.x = {m.body.velocity.x} segment.a.x = {segment.a.x}, m.radius={m.radius}")
-                            m.body.position = (100, 50)
-                            continue
+                    contact_info = segment.shapes_collide(m)
+                    if contact_info.points:
+                        m.body.position = (100, 50)
+                        continue
+                    # this is not really general for segments that aren't vertical
+                    #if segment.a.y - 10 <= m.body.position.y and m.body.position.y <= segment.b.y + 10:
+                    #    # we're in the bottom "channel"
+                    #    old_x = m.body.position.x
+                    #    new_x = old_x + m.body.velocity.x/FRAMES_PER_SECOND
+                    #    # check if it's moving really really fast and would "go through" the segment
+                    #    if abs(new_x - segment.a.x) <= (m.radius + 10) or (sign(old_x - segment.a.x) != sign(new_x - segment.a.x)):
+                    #        #print(f"m.body.position.x = {m.body.position.x} m.body.velocity.x = {m.body.velocity.x} segment.a.x = {segment.a.x}, m.radius={m.radius}")
+                    #        m.body.position = (100, 50)
+                    #        continue
         if len(winners) != beforeWinners:
             js.console.log(f"transition from {beforeWinners} winners to {len(winners)}, len(marbles) is {len(marbles)}")
             if len(marbles) == 1:
