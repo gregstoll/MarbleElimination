@@ -180,6 +180,16 @@ def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) ->
     space.add(body, new_shape)
     return new_shape
 
+def addRedSegment(space : pymunk.Space, collision_segments : t.List[pymunk.Segment], endpoint1 : tuple[float, float], endpoint2 : tuple[float, float]):
+    red_segment = pymunk.Segment(space.static_body, endpoint1, endpoint2, 10)
+    red_segment.elasticity = 1.0
+    red_segment.collision_type = 2
+    red_segment.color = pygame.Color("Red")
+    space.add(red_segment)
+    if IS_EMSCRIPTEN:
+        collision_segments.append(red_segment)
+
+
 async def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -206,19 +216,13 @@ async def main():
     # Create level
     create_level2(space)
 
-    # Create red segment
-    red_segment = pymunk.Segment(space.static_body, (10, HEIGHT-100), (10, HEIGHT-20), 10)
-    red_segment.elasticity = 1.0
-    red_segment.collision_type = 2
-    red_segment.color = pygame.Color("Red")
-    space.add(red_segment)
+    # Create red segment on left
+    addRedSegment(space, collision_segments, (10, HEIGHT-100), (10, HEIGHT-20))
 
     # emscripten version uses pymunk 6.4, which doesn't
     # have on_collision :-(
     if not IS_EMSCRIPTEN:
         space.on_collision(1, 2, on_red_segment_hits_marble)
-    else:
-        collision_segments.append(red_segment)
 
     platform_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
     platform_body.position = (700, 350)
@@ -313,18 +317,8 @@ async def main():
             js.console.log(f"transition from {beforeWinners} winners to {len(winners)}, len(marbles) is {len(marbles)}")
             if len(marbles) == 1:
                 js.console.log("adding second red segment")
-                # Create red segment
-                red_segment2 = pymunk.Segment(space.static_body, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20), 10)
-                red_segment2.elasticity = 1.0
-                red_segment2.collision_type = 2
-                red_segment2.color = pygame.Color("Red")
-                space.add(red_segment2)
-
-                # emscripten version uses pymunk 6.4, which doesn't
-                # have on_collision :-(
-                if IS_EMSCRIPTEN:
-                    collision_segments.append(red_segment2)
-
+                # Create red segment on right
+                addRedSegment(space, collision_segments, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20))
 
     pygame.quit()
 
