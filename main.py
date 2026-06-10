@@ -37,6 +37,7 @@ def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
     #shape.color = pygame.Color(50, 200, 50, 1)
     shape.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
     shape.collision_type = 1
+    shape.is_rainbow = False
     space.add(body, shape)
     return shape
 
@@ -178,6 +179,7 @@ def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) ->
     new_shape = pymunk.Circle(body, 15)
     new_shape.elasticity = 0.9
     new_shape.color = shape.color
+    new_shape.is_rainbow = shape.is_rainbow
     space.add(body, new_shape)
     return new_shape
 
@@ -213,6 +215,7 @@ async def main():
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
+    marbles[0].is_rainbow = True
 
     # Create level
     create_level2(space)
@@ -233,7 +236,6 @@ async def main():
 
     running = True
     winners : t.List[pymunk.Shape] = []
-    random_marble : pymunk.Shape = marbles[0]
     direction = 1
     while running:
         for event in pygame.event.get():
@@ -291,7 +293,10 @@ async def main():
         speed = 100
         platform_body.velocity = Vec2d(0, direction * speed)
 
-        random_marble.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+        for marblesToCheck in (marbles, winners):
+            for m in marblesToCheck:
+                if m.is_rainbow:
+                    m.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
         beforeWinners = len(winners)
         for m in marbles:
             if m.body.position.x > WIDTH:
@@ -299,8 +304,6 @@ async def main():
                 marbles.remove(m)
                 new_marble = drawWinner(space, m, len(winners))
                 winners.append(new_marble)
-                if random_marble == m:
-                    random_marble = new_marble
             elif IS_EMSCRIPTEN:
                 # have to do on_collision check here
                 for segment in collision_segments:
