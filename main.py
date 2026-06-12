@@ -62,12 +62,11 @@ def create_level1(space: pymunk.Space) -> t.List[pymunk.Segment]:
 
     # Add grills
     grill_x : int = 0
-    while (grill_x < WIDTH-50):
+    while (grill_x < WIDTH-70):
         grill = pymunk.Segment(space.static_body, (grill_x, 600), (grill_x+50, 605), 5)
         grill.elasticity = 0.9
         segments.append(grill)
-        grill_x = grill_x + 125
-
+        grill_x = grill_x + 105
 
     # Add slopes
     slope1 = pymunk.Segment(space.static_body, (50, 120), (150, 220), 5)
@@ -81,9 +80,6 @@ def create_level1(space: pymunk.Space) -> t.List[pymunk.Segment]:
     segments.append(slope3)
 
     segments.extend(drawRotor(300, 350, 180))
-    rotor_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
-    rotor_body.position = (300, 350)
-    rotor_body.angular_velocity = math.radians(180)  # 180 degrees per second
     space.add(*segments)
     return segments
 
@@ -104,7 +100,7 @@ def create_level2(space: pymunk.Space) -> t.List[pymunk.Segment]:
     segments = []
     # Add grills
     grill_x : int = 0
-    while (grill_x < WIDTH-50):
+    while (grill_x < WIDTH-70):
         grill = pymunk.Segment(space.static_body, (grill_x, 600), (grill_x+50, 605), 5)
         grill.elasticity = 0.9
         segments.append(grill)
@@ -198,6 +194,7 @@ async def main():
 
     # Create level
     segments = create_level2(space)
+    lastLevel = 2
 
     # Create red segment on left
     addRedSegment(space, collision_segments, (10, HEIGHT-100), (10, HEIGHT-20))
@@ -306,16 +303,20 @@ async def main():
             if len(marbles) == 1:
                 js.console.log("marble eliminated!")
                 space.remove(*marbles)
-                marbles = [create_marble_from_winner(space, w) for w in winners]
-                space.remove(*winners)
-                winners = []
-                for m in marbles:
-                    m.body.position = (random.randint(50, WIDTH-50), 50)
+                if len(winners) != 1:
+                    marbles = [create_marble_from_winner(space, w) for w in winners]
+                    space.remove(*winners)
+                    winners = []
 
-                # Create red segment on right
-                #addRedSegment(space, collision_segments, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20))
-                space.remove(*segments)
-                segments = create_level1(space)
+                    # Create red segment on right
+                    #addRedSegment(space, collision_segments, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20))
+                    space.remove(*segments)
+                    if lastLevel == 2:
+                        segments = create_level1(space)
+                        lastLevel = 1
+                    else:
+                        segments = create_level2(space)
+                        lastLevel = 2
 
     pygame.quit()
 
