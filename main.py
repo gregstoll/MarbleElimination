@@ -20,7 +20,7 @@ IS_EMSCRIPTEN = sys.platform == 'emscripten'
 if IS_EMSCRIPTEN:
     import js
 
-FRAMES_PER_SECOND = 60
+FRAMES_PER_SECOND = 60.0
 
 WIDTH : int = 1500
 HEIGHT : int = 750
@@ -111,7 +111,7 @@ def create_level1(space: pymunk.Space) -> None:
     rotor_segment2.elasticity = 0.9
     space.add(rotor_body, rotor_segment, rotor_segment2)
 
-def drawRotor(space : pymunk.Space, x_pos: int, y_pos: int, velocity: int) -> None:
+def drawRotor(space : pymunk.Space, x_pos: int, y_pos: int, velocity: int) -> t.List[pymunk.Segment]:
     rotor_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
     rotor_body.position = (x_pos, y_pos)
     rotor_body.angular_velocity = math.radians(velocity)  # 180 degrees per second
@@ -121,56 +121,59 @@ def drawRotor(space : pymunk.Space, x_pos: int, y_pos: int, velocity: int) -> No
     rotor_segment.elasticity = 0.9
     rotor_segment2 = pymunk.Segment(rotor_body, (0, -100), (0, 100), 5)
     rotor_segment2.elasticity = 0.9
-    space.add(rotor_body, rotor_segment, rotor_segment2)
+    segments = [rotor_body, rotor_segment, rotor_segment2]
+    return segments
 
-
-def create_level2(space: pymunk.Space) -> None:
+def create_level2(space: pymunk.Space) -> t.List[pymunk.Segment]:
+    segments = []
     # Add a floor
     floor = pymunk.Segment(space.static_body, (0, HEIGHT-20), (WIDTH, HEIGHT-10), 10)
     floor.elasticity = 0.9
-    space.add(floor)
+    segments.append(floor)
 
     # Add a ceiling
     ceiling = pymunk.Segment(space.static_body, (0, 10), (WIDTH, 10), 10)
     ceiling.elasticity = 0.9
-    space.add(ceiling)
+    segments.append(ceiling)
 
     # Bounds
     left = pymunk.Segment(space.static_body, (0, 0), (0, HEIGHT), 10)
     left.elasticity = 1.0
-    space.add(left)
+    segments.append(left)
     right = pymunk.Segment(space.static_body, (WIDTH-10, 0), (WIDTH-10, HEIGHT-100), 10)
+    segments.append(right)
     right.elasticity = 1.0
-    space.add(right)
 
     # Add grill
     grill_x : int = 0
     while (grill_x < WIDTH-50):
         grill = pymunk.Segment(space.static_body, (grill_x, 600), (grill_x+50, 605), 5)
         grill.elasticity = 0.9
-        space.add(grill)
+        segments.append(grill)
         grill_x = grill_x + 100
 
     # Add slopes
     slope1 = pymunk.Segment(space.static_body, (50, 120), (150, 220), 5)
     slope1.elasticity = 0.9
-    space.add(slope1)
+    segments.append(slope1)
     slope2 = pymunk.Segment(space.static_body, (100, 370), (200, 470), 5)
     slope2.elasticity = 0.9
-    space.add(slope2)
+    segments.append(slope2)
 
-    drawRotor(space, 200, 200, 180)
-    drawRotor(space, 400, 200, 185)
-    drawRotor(space, 600, 200, 190)
-    drawRotor(space, 800, 200, 195)
-    drawRotor(space, 1000, 200, 170)
-    drawRotor(space, 1200, 200, 175)
-    drawRotor(space, 250, 400, 180)
-    drawRotor(space, 450, 400, 185)
-    drawRotor(space, 650, 400, 190)
-    drawRotor(space, 850, 400, 195)
-    drawRotor(space, 1050, 400, 170)
-    drawRotor(space, 1250, 400, 175)
+    segments.extend(drawRotor(space, 200, 200, 180))
+    segments.extend(drawRotor(space, 400, 200, 185))
+    segments.extend(drawRotor(space, 600, 200, 190))
+    segments.extend(drawRotor(space, 800, 200, 195))
+    segments.extend(drawRotor(space, 1000, 200, 170))
+    segments.extend(drawRotor(space, 1200, 200, 175))
+    segments.extend(drawRotor(space, 250, 400, 180))
+    segments.extend(drawRotor(space, 450, 400, 185))
+    segments.extend(drawRotor(space, 650, 400, 190))
+    segments.extend(drawRotor(space, 850, 400, 195))
+    segments.extend(drawRotor(space, 1050, 400, 170))
+    segments.extend(drawRotor(space, 1250, 400, 175))
+    space.add(*segments)
+    return segments
 
 
 def drawWinner(space : pymunk.Space, shape : pymunk.Shape, winner_index: int) -> pymunk.Shape:
@@ -218,7 +221,7 @@ async def main():
     marbles[0].is_rainbow = True
 
     # Create level
-    create_level2(space)
+    segments = create_level2(space)
 
     # Create red segment on left
     addRedSegment(space, collision_segments, (10, HEIGHT-100), (10, HEIGHT-20))
@@ -327,6 +330,7 @@ async def main():
                 js.console.log("adding second red segment")
                 # Create red segment on right
                 addRedSegment(space, collision_segments, (WIDTH-20, HEIGHT-100), (WIDTH-20, HEIGHT-20))
+                space.remove(*segments)
 
     pygame.quit()
 
