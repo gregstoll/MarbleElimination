@@ -149,6 +149,10 @@ def addRedSegment(space : pymunk.Space, collision_segments : t.List[pymunk.Segme
     if IS_EMSCRIPTEN:
         collision_segments.append(red_segment)
 
+def log(s):
+    print(s)
+    if IS_EMSCRIPTEN:
+        js.console.log(s)
 
 async def main():
     pygame.init()
@@ -161,7 +165,7 @@ async def main():
         seed = time.monotonic_ns()
         #print("seed is " + str(seed))
         random.seed(seed)
-        js.console.log(f"seed is {seed}")
+        log(f"seed is {seed}")
 
     space = pymunk.Space()
     space.gravity = (0, 900)  # gravity pointing down
@@ -277,10 +281,12 @@ async def main():
         beforeWinners = len(winners)
         for m in marbles:
             if m.body.position.x > WIDTH:
+                log(f"before remove marble: len(marbles)={len(marbles)}, len(winners)={len(winners)}")
                 space.remove(m)
                 marbles.remove(m)
                 new_marble = drawWinner(space, m, len(winners))
                 winners.append(new_marble)
+                log(f"after remove marble: len(marbles)={len(marbles)}, len(winners)={len(winners)}")
             elif IS_EMSCRIPTEN:
                 # have to do on_collision check here
                 for segment in collision_segments:
@@ -299,9 +305,9 @@ async def main():
                     #        m.body.position = (100, 50)
                     #        continue
         if len(winners) != beforeWinners:
-            js.console.log(f"transition from {beforeWinners} winners to {len(winners)}, len(marbles) is {len(marbles)}")
+            log(f"transition from {beforeWinners} winners to {len(winners)}, len(marbles) is {len(marbles)}")
             if len(marbles) == 1:
-                js.console.log("marble eliminated!")
+                log("marble eliminated!")
                 space.remove(*marbles)
                 if len(winners) != 1:
                     marbles = [create_marble_from_winner(space, w) for w in winners]
