@@ -28,13 +28,36 @@ HEIGHT : int = 750
 def sign(x):
     return int(math.copysign(1, x)) if x != 0 else 0
 
-def addMarble(space : pymunk.Space, x : int, y : int) -> pymunk.Shape:
+def rgb_colors_too_close(rgb1, rgb2) -> bool:
+    # CieLAB or CieXYZ are more accurate but are complicated
+    # Just use redmean
+    # https://en.wikipedia.org/wiki/Color_difference#cite_ref-euc_1-1
+    rmean = (rgb1[0] + rgb2[0]) / 2.0
+    rpart = (2 + (rmean / 256.0)) * (rgb1[0] - rgb2[0]) * (rgb1[0] - rgb2[0])
+    gpart = 4 * (rgb1[1] - rgb2[1]) * (rgb1[1] - rgb2[1])
+    bpart = (2 + ((255 - rmean) / 256.0)) * (rgb1[2] - rgb2[2]) * (rgb1[2] - rgb2[2])
+    distance_squared = rpart + gpart + bpart
+    log(f"distance_squared between {rgb1} and {rgb2} : {distance_squared}")
+    return distance_squared < 60000
+
+def add_marble(space : pymunk.Space, x : int, y : int, colors: t.List[tuple]) -> pymunk.Shape:
     body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 15))
     body.position = (x, y)
     shape = pymunk.Circle(body, 15)
     shape.elasticity = 0.9
     #shape.color = pygame.Color(50, 200, 50, 1)
-    shape.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+    too_close = True
+    while too_close:
+        color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250)) # RGB random color
+        too_close = False
+        for c in colors:
+            if rgb_colors_too_close(color, c):
+                log(f"colors too close: {color} and {c}")
+                too_close = True
+                break
+    colors.append(color)
+    log(f"adding color: {color}")
+    shape.color = (color[0], color[1], color[2], 1)
     shape.collision_type = 1
     shape.is_rainbow = False
     space.add(body, shape)
@@ -172,10 +195,11 @@ async def main():
 
     # Create marbles
     marbles : t.List[pymunk.Shape] = []
-    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
-    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
-    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
-    marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
+    colors : t.List[tuple] = []
+    marbles.append(add_marble(space, random.randint(50, WIDTH-50), 50, colors))
+    marbles.append(add_marble(space, random.randint(50, WIDTH-50), 50, colors))
+    marbles.append(add_marble(space, random.randint(50, WIDTH-50), 50, colors))
+    marbles.append(add_marble(space, random.randint(50, WIDTH-50), 50, colors))
     if random.randint(0, 1) == 0:
         marbles[0].is_rainbow = True
 
