@@ -279,7 +279,7 @@ async def main():
                 if m.is_rainbow:
                     # TODO - use some kinda fancy cycle
                     #m.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
-                    base_value = frame_num / 120.0
+                    base_value = frame_num
                     m.color = (0.5 * (math.sin(base_value - 2) + 1) / 256,
                                0.5 * (math.sin(base_value + 2) + 1) / 256,
                                0.5 * (math.sin(base_value) + 1) / 256,
