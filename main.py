@@ -216,7 +216,8 @@ async def main():
 
     running = True
     winners : t.List[pymunk.Shape] = []
-    direction = 1
+    platform_direction = 1
+    frame_num = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -267,17 +268,23 @@ async def main():
 
         # Move platform back and forth
         if platform_body.position.y > HEIGHT-100:
-            direction = -1
+            platform_direction = -1
         elif platform_body.position.y < 100:
-            direction = 1
+            platform_direction = 1
         speed = 100
-        platform_body.velocity = Vec2d(0, direction * speed)
+        platform_body.velocity = Vec2d(0, platform_direction * speed)
 
         for marblesToCheck in (marbles, winners):
             for m in marblesToCheck:
                 if m.is_rainbow:
                     # TODO - use some kinda fancy cycle
-                    m.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+                    #m.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
+                    base_value = frame_num / 120.0
+                    m.color = (0.5 * (math.sin(base_value - 2) + 1) / 256,
+                               0.5 * (math.sin(base_value + 2) + 1) / 256,
+                               0.5 * (math.sin(base_value) + 1) / 256,
+                               1)
+
         beforeWinners = len(winners)
         for m in marbles:
             if m.body.position.x > WIDTH:
@@ -323,6 +330,7 @@ async def main():
                     else:
                         segments = create_level2(space)
                         lastLevel = 2
+        frame_num = frame_num + 1
 
     pygame.quit()
 

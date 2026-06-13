@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+build/web/marbleelimination.apk
+
 # Distribution / packaging
 .Python
 build/web-cache/
