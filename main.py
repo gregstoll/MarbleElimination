@@ -176,7 +176,8 @@ async def main():
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
     marbles.append(addMarble(space, random.randint(50, WIDTH-50), 50))
-    marbles[0].is_rainbow = True
+    if random.randint(0, 1) == 0:
+        marbles[0].is_rainbow = True
 
     # Add a floor
     floor = pymunk.Segment(space.static_body, (0, HEIGHT-20), (WIDTH, HEIGHT-10), 10)
