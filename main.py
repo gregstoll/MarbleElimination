@@ -277,13 +277,14 @@ async def main():
         for marblesToCheck in (marbles, winners):
             for m in marblesToCheck:
                 if m.is_rainbow:
-                    # TODO - use some kinda fancy cycle
                     #m.color = (random.randint(10, 250), random.randint(10, 250), random.randint(10, 250), 1)  # RGB random color
-                    base_value = frame_num
-                    m.color = (0.5 * (math.sin(base_value - 2) + 1) / 256,
-                               0.5 * (math.sin(base_value + 2) + 1) / 256,
-                               0.5 * (math.sin(base_value) + 1) / 256,
+                    base_value = frame_num / 12.0
+                    # fancy rainbow cycle
+                    m.color = (0.5 * (math.sin(base_value - 2) + 1) * 256,
+                               0.5 * (math.sin(base_value + 2) + 1) * 256,
+                               0.5 * (math.sin(base_value) + 1) * 256,
                                1)
+                    #log(f"new rainbow color: {m.color}")
 
         beforeWinners = len(winners)
         for m in marbles:
