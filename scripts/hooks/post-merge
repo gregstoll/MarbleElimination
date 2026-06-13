@@ -2,20 +2,22 @@
 cd "$(git rev-parse --show-toplevel)"
 
 HASH=$(git rev-parse --short HEAD)
-ARCHIVE=$(ls *.tar.gz 2>/dev/null | head -1)
+ARCHIVE=$(ls build/web/marbleelimination.tar.gz 2>/dev/null | head -1)
+#echo "archive is $ARCHIVE"
 
 if [ -z "$ARCHIVE" ]; then
-    echo "post-merge: no .tar.gz found, skipping cache busting"
+    echo "post-merge: no marbleelimination.tar.gz found, skipping cache busting"
     exit 0
 fi
 
-BASE="${ARCHIVE%.tar.gz}"
-NEW_ARCHIVE="${BASE}.${HASH}.tar.gz"
+BASE=$(basename "${ARCHIVE%.tar.gz}")
+NEW_ARCHIVE="build/web/${BASE}.${HASH}.tar.gz"
 
-mv "$ARCHIVE" "$NEW_ARCHIVE"
-sed -i "s/${ARCHIVE}/${NEW_ARCHIVE}/g" index.html
+ln -s "$(basename $ARCHIVE)" "$NEW_ARCHIVE"
+echo "s/$(basename $ARCHIVE)/$(basename $NEW_ARCHIVE)/g"
+sed -i "s/$(basename $ARCHIVE)/$(basename $NEW_ARCHIVE)/g" build/web/index.html
 
-echo "post-merge: renamed $ARCHIVE → $NEW_ARCHIVE"
+echo "post-merge: renamed $(basename $ARCHIVE) → $(basename $NEW_ARCHIVE)"
 
 # Remove old versioned archives, keep only the new one
-find . -maxdepth 1 -name "*.tar.gz" ! -name "$NEW_ARCHIVE" -delete
+find build/web -maxdepth 1 -name "*.tar.gz" ! -name "${BASE}.${HASH}.tar.gz" ! -name "${BASE}.tar.gz" -delete
