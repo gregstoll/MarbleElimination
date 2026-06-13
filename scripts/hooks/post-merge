@@ -15,6 +15,7 @@ NEW_ARCHIVE="build/web/${BASE}.${HASH}.tar.gz"
 
 ln -s "$(basename $ARCHIVE)" "$NEW_ARCHIVE"
 echo "s/$(basename $ARCHIVE)/$(basename $NEW_ARCHIVE)/g"
+git restore build/web/index.html
 sed -i "s/$(basename $ARCHIVE)/$(basename $NEW_ARCHIVE)/g" build/web/index.html
 
 echo "post-merge: renamed $(basename $ARCHIVE) → $(basename $NEW_ARCHIVE)"
