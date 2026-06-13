@@ -317,6 +317,7 @@ async def main():
             if len(marbles) == 1:
                 log("marble eliminated!")
                 space.remove(*marbles)
+                marbles = []
                 if len(winners) != 1:
                     marbles = [create_marble_from_winner(space, w) for w in winners]
                     space.remove(*winners)
